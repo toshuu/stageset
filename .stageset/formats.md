@@ -99,7 +99,7 @@ Do not use vague checks such as "works correctly". Prefer a command and an obser
 
 ## 7. Run report IDs and files
 
-Use a new file for every run in `.stageset/runs/`. Use the next ID, such as `RUN-000001`. Do not overwrite a report. Do not reuse an ID.
+Use a new file for every run in `.stageset/runs/`. Use IDs in the format `YYYYMMDD-HHMMSS-RUN`. Generate an ID with `python scripts/stageset-status.py --new-run-id`. Name the file `<id>.md`. The script adds a numeric suffix if it finds an existing ID for the same second. Never overwrite a report.
 
 Use `.stageset/templates/run-report-template.md`.
 
@@ -133,7 +133,7 @@ Use this table format:
 | --- | --- | --- | --- | --- | --- |
 | FACT-0001 | YYYY-MM-DD | Verified statement. | Environment or project scope. | CURRENT | `.stageset/runs/RUN-000001.md` |
 
-Use `CURRENT` or `SUPERSEDED` for State. If a fact changes, add a new fact and mark the old fact as `SUPERSEDED`. Keep the history. The source run must have a `PASS` result.
+Use `CURRENT` or `SUPERSEDED` for State. If a fact changes, add a new fact and mark the old fact as `SUPERSEDED`. Keep the history. The source run must have a `PASS` result. Use a source path such as `.stageset/runs/YYYYMMDD-HHMMSS-RUN.md`.
 
 ## 10. Escalation
 
@@ -147,7 +147,7 @@ After the third failed attempt:
 4. Run `python scripts/stageset-status.py --escalate CHECK-ID`.
 5. Give the planner the generated escalation file.
 
-The planner must resolve the design or instruction. The planner must raise `spec_revision` and set `resolution_of` to the run ID. The coder must not redesign the feature.
+The planner must resolve the design or instruction. The planner must raise `spec_revision` and set `resolution_of` to the run ID. The coder must not redesign the feature. Each generated escalation has a timestamp ID in the format `YYYYMMDD-HHMMSS-ESCALATION`, with a numeric suffix on collision.
 
 ## 11. Generated files
 
