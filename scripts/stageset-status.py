@@ -96,6 +96,8 @@ def event_rows(work: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
     timezone = ZoneInfo(work["timezone"])
     for path in files_in(work["sessions_dir"]):
         fields, body = front_matter(path)
+        if not fields:
+            continue
         kind = fields.get("type", "").upper()
         if kind not in EVENT_TYPES:
             issues.append(f"ERROR: {path.relative_to(ROOT)}: invalid event type '{kind}'")
@@ -284,7 +286,7 @@ def create_escalation(work: dict[str, Any], check_id: str, skeletons: list[dict[
            "## Failure summary", "", f"The check failed {len(failed)} times on revision {skel['spec']}. Stop implementation. Do not redesign the feature.", "",
            "## Attempts", ""]
     for r in failed[-3:]:
-        out += [f"### {r['id']} — attempt {r.get('attempt')}", "", f"- Command: `{r.get('command', '')}`", "", "#### Observed output", "", heading_block(r["body"], "Observed output"), "", "#### Tried", "", heading_block(r["body"], "Tried"), "", "#### Attempt diff", "", heading_block(r["body"], "Attempt diff"), "", "#### Smallest repro", "", heading_block(r["body"], "Smallest repro"), ""]
+        out += [f"### {r['id']} — attempt {r.get('attempt')}", "", f"- Command: `{r.get('command', '')}`", "", "#### Observed output", "", heading_block(r["body"], "Observed output (trimmed)"), "", "#### Tried", "", heading_block(r["body"], "Tried"), "", "#### Attempt diff", "", heading_block(r["body"], "Attempt diff"), "", "#### Smallest repro", "", heading_block(r["body"], "Smallest repro"), ""]
     run_refs = ", ".join("`" + r["path"].relative_to(ROOT).as_posix() + "`" for r in failed[-3:])
     out += ["## Planner action", "", f"Read the skeleton and these run reports: {run_refs}.", "",
             "Update the skeleton to resolve the verified blocker. Increase `spec_revision` by one. Keep `implemented_revision` unchanged. Set `status: READY`. Set `blocker_ref: -`. Set `resolution_of` to the latest run ID.", "",
@@ -305,6 +307,20 @@ def heading_block(body: str, heading: str) -> str:
 
 def validate(work: dict[str, Any], skeletons: list[dict[str, Any]], runs: list[dict[str, Any]], events: list[dict[str, Any]], issues: list[str]) -> list[str]:
     errors = list(issues)
+    # Validate idea documents. The index and README are navigation files.
+    for idea_path in files_in(work["ideas_dir"]):
+        if idea_path.name in {"README.md", "_index.md"}:
+            continue
+        idea_fields, _ = front_matter(idea_path)
+        for key in ("id", "title", "status", "priority", "created_in", "updated_in"):
+            if not idea_fields.get(key):
+                errors.append(f"ERROR: {idea_path.relative_to(ROOT)}: missing idea field {key}")
+        if idea_fields.get("status", "").upper() not in IDEA_STATES:
+            errors.append(f"ERROR: {idea_path.relative_to(ROOT)}: invalid idea status {idea_fields.get('status', '')}")
+        for key in ("created_in", "updated_in"):
+            event_ref = idea_fields.get(key, "")
+            if event_ref and event_ref != "-" and not (ROOT / event_ref).is_file():
+                errors.append(f"ERROR: {idea_path.relative_to(ROOT)}: {key} does not point to an event file")
     valid_runs = {r["path"].relative_to(ROOT).as_posix(): r for r in runs}
     all_run_ids = {r["id"] for r in runs}
     check_ids: set[str] = set()
@@ -362,6 +378,12 @@ def validate(work: dict[str, Any], skeletons: list[dict[str, Any]], runs: list[d
     for event in events:
         if event["time"] == "PENDING":
             errors.append(f"ERROR: {event['path'].relative_to(ROOT)}: unresolved PENDING time")
+    expected_tracker = tracker_content(events)
+    expected_digest = digest_content(events, skeletons, runs, work)
+    if not work["tracker_path"].is_file() or work["tracker_path"].read_text(encoding="utf-8") != expected_tracker:
+        errors.append("ERROR: generated session tracker is missing or stale; run --sync")
+    if not work["digest_path"].is_file() or work["digest_path"].read_text(encoding="utf-8") != expected_digest:
+        errors.append("ERROR: generated digest is missing or stale; run --sync")
     return errors
 
 
