@@ -99,7 +99,7 @@ Do not use vague checks such as "works correctly". Prefer a command and an obser
 
 ## 7. Run report IDs and files
 
-Use a new file for every run in `.stageset/runs/`. Use IDs in the format `YYYYMMDD-HHMMSS-RUN`. Generate an ID with `python scripts/stageset-status.py --new-run-id`. Name the file `<id>.md`. The script adds a numeric suffix if it finds an existing ID for the same second. Never overwrite a report.
+Use a new file for every run in `.stageset/runs/`. Use IDs in the format `YYYYMMDD-HHMMSS-RUN`. Generate an ID with `python scripts/stageset-status.py --new-run-id`. The command reserves the ID so concurrent agents do not claim it. Name the report `<id>.md`. After you save the report, delete `.stageset/runs/.<id>.reserve`. Do not delete the reservation before the report exists. Never overwrite a report.
 
 Use `.stageset/templates/run-report-template.md`.
 
