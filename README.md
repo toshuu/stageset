@@ -69,6 +69,16 @@ workspace:
 
 The folder names are configurable. The `.stageset/` and `scripts/` folders stay at the repository root.
 
+## Evidence IDs
+
+Run reports use timestamp IDs in the format `YYYYMMDD-HHMMSS-RUN`. Generate a new ID with:
+
+```bash
+python scripts/stageset-status.py --new-run-id
+```
+
+Escalation files use `YYYYMMDD-HHMMSS-ESCALATION`. The script adds a numeric suffix when it finds a same-second ID. Run reports, escalation files, and session events use timestamp-based IDs. There is no global sequential counter.
+
 ## Revision rule
 
 The coder finds work by comparing revisions:
