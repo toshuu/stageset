@@ -12,6 +12,8 @@ command: "python -m pytest -q tests/test_example.py"
 
 # Run report
 
+Before you create a report, run `python scripts/stageset-status.py --new-run-id` and use its output for `id` and the file name. This command reserves the ID. After you save the report, delete `.stageset/runs/.<id>.reserve`. Do not delete the reservation before the report exists.
+
 ## Goal
 
 State the exact check or probe goal.
