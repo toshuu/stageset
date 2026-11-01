@@ -77,6 +77,8 @@ Run reports use timestamp IDs in the format `YYYYMMDD-HHMMSS-RUN`. Generate a ne
 python scripts/stageset-status.py --new-run-id
 ```
 
+The command reserves the ID. After you save the report, delete `.stageset/runs/.<id>.reserve`. Do not delete the reservation before the report exists. This prevents concurrent agents from claiming the same ID.
+
 Escalation files use `YYYYMMDD-HHMMSS-ESCALATION`. The script adds a numeric suffix when it finds a same-second ID. Run reports, escalation files, and session events use timestamp-based IDs. There is no global sequential counter.
 
 ## Revision rule
