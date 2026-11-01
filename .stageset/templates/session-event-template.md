@@ -3,7 +3,7 @@ type: IDEATION
 time: PENDING
 summary: Short summary of this focused session.
 paths: Ideas/example.md; Skeletons/src/example.ts
-related: IDEA-0001; RUN-000001
+related: IDEA-0001; YYYYMMDD-HHMMSS-RUN
 commit: -
 remote: -
 branch: -
