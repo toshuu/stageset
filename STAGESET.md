@@ -149,6 +149,8 @@ For a target that does not support comments, use a Markdown sidecar file. Add `.
 
 Keep one target source file per implementation skeleton. If one source file is too large to plan as a whole, limit the skeleton to one function in that file. State the function name in `Purpose` and `Contract`. Split unrelated files into separate skeletons. Keep each skeleton small and precise.
 
+Treat the skeleton as the implementation contract. If a required step is impossible in the real project, the coder must not deviate silently. The coder must stop the affected work, write a run report with the exact conflict and observed evidence, set the skeleton to `BLOCKED`, set `blocker_ref` to that report, and ask the planner to revise the skeleton.
+
 ## 7. Revisions and implementation state
 
 Each implementation skeleton has two revision numbers:
