@@ -95,10 +95,9 @@ def timestamp_id(kind: str, folder: Path, timezone: str) -> tuple[str, str]:
     """Return a timestamp ID and its local timestamp. Add a suffix on collision."""
     now = datetime.now(ZoneInfo(timezone))
     base = now.strftime("%Y%m%d-%H%M%S") + "-" + kind
-    used = {p.stem for p in folder.glob("*.md")} if folder.is_dir() else set()
     candidate = base
     suffix = 2
-    while candidate in used:
+    while (folder / f"{candidate}.md").exists() or (folder / f".{candidate}.reserve").exists():
         candidate = f"{base}-{suffix:02d}"
         suffix += 1
     return candidate, now.isoformat(timespec="seconds")
@@ -346,6 +345,8 @@ def validate(work: dict[str, Any], skeletons: list[dict[str, Any]], runs: list[d
                 errors.append(f"ERROR: {idea_path.relative_to(ROOT)}: {key} does not point to an event file")
     valid_runs = {r["path"].relative_to(ROOT).as_posix(): r for r in runs}
     all_run_ids = {r["id"] for r in runs}
+    for reservation in work["runs_dir"].glob(".*.reserve") if work["runs_dir"].is_dir() else []:
+        errors.append(f"ERROR: {reservation.relative_to(ROOT)}: run ID reservation remains; create the report and remove this reservation file")
     check_ids: set[str] = set()
     for s in skeletons:
         if "error" in s:
@@ -429,9 +430,18 @@ def main() -> int:
         runs, run_issues = run_rows(work)
         events, event_issues = event_rows(work)
         if args.new_run_id:
-            run_id, _ = timestamp_id("RUN", work["runs_dir"], work["timezone"])
-            print(run_id)
-            return 0
+            work["runs_dir"].mkdir(parents=True, exist_ok=True)
+            while True:
+                run_id, run_time = timestamp_id("RUN", work["runs_dir"], work["timezone"])
+                reservation = work["runs_dir"] / f".{run_id}.reserve"
+                try:
+                    with reservation.open("x", encoding="utf-8") as handle:
+                        handle.write(run_time)
+                    print(run_id)
+                    return 0
+                except FileExistsError:
+                    # Another agent reserved this ID after the availability check.
+                    continue
         if args.escalate:
             path = create_escalation(work, args.escalate, skeletons, runs)
             print(f"Created {path.relative_to(ROOT)}")
