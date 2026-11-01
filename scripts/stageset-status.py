@@ -91,6 +91,19 @@ def files_in(folder: Path, suffix: str = ".md") -> list[Path]:
     return sorted(p for p in folder.rglob(f"*{suffix}") if p.is_file()) if folder.is_dir() else []
 
 
+def timestamp_id(kind: str, folder: Path, timezone: str) -> tuple[str, str]:
+    """Return a timestamp ID and its local timestamp. Add a suffix on collision."""
+    now = datetime.now(ZoneInfo(timezone))
+    base = now.strftime("%Y%m%d-%H%M%S") + "-" + kind
+    used = {p.stem for p in folder.glob("*.md")} if folder.is_dir() else set()
+    candidate = base
+    suffix = 2
+    while candidate in used:
+        candidate = f"{base}-{suffix:02d}"
+        suffix += 1
+    return candidate, now.isoformat(timespec="seconds")
+
+
 def event_rows(work: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
     rows, issues = [], []
     timezone = ZoneInfo(work["timezone"])
@@ -278,7 +291,10 @@ def create_escalation(work: dict[str, Any], check_id: str, skeletons: list[dict[
     expected = f"{work['runs_dir'].relative_to(ROOT).as_posix()}/{latest['id']}.md"
     if sf["status"] != "BLOCKED" or sf.get("blocker_ref") != expected:
         raise ValueError(f"Set skeleton status to BLOCKED and blocker_ref to {expected} first")
-    out = [f"# Escalation: {check_id}", "", GENERATED, "",
+    work["escalations_dir"].mkdir(parents=True, exist_ok=True)
+    escalation_id, created_at = timestamp_id("ESCALATION", work["escalations_dir"], work["timezone"])
+    out = ["---", f"id: {escalation_id}", f"time: {created_at}", "---", "",
+           f"# Escalation: {check_id}", "", GENERATED, "",
            f"- Skeleton: `{skel['file'].relative_to(ROOT)}`",
            f"- Check: `{check_id}`",
            f"- Failed attempts: {len(failed)}",
@@ -291,11 +307,18 @@ def create_escalation(work: dict[str, Any], check_id: str, skeletons: list[dict[
     out += ["## Planner action", "", f"Read the skeleton and these run reports: {run_refs}.", "",
             "Update the skeleton to resolve the verified blocker. Increase `spec_revision` by one. Keep `implemented_revision` unchanged. Set `status: READY`. Set `blocker_ref: -`. Set `resolution_of` to the latest run ID.", "",
             "The coder must implement only the revised skeleton. The coder must not redesign the feature.", ""]
-    dest = work["escalations_dir"] / f"escalation-{check_id.lower()}-r{skel['spec']}-{latest['id'].lower()}.md"
-    if dest.exists():
-        raise ValueError(f"Escalation already exists: {dest.relative_to(ROOT)}")
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text("\n".join(out), encoding="utf-8")
+    dest = work["escalations_dir"] / f"{escalation_id}.md"
+    # Exclusive creation prevents two agents from overwriting the same escalation.
+    while True:
+        try:
+            with dest.open("x", encoding="utf-8") as handle:
+                handle.write("\\n".join(out))
+            break
+        except FileExistsError:
+            escalation_id, created_at = timestamp_id("ESCALATION", work["escalations_dir"], work["timezone"])
+            out[1] = f"id: {escalation_id}"
+            out[2] = f"time: {created_at}"
+            dest = work["escalations_dir"] / f"{escalation_id}.md"
     return dest
 
 
@@ -365,6 +388,10 @@ def validate(work: dict[str, Any], skeletons: list[dict[str, Any]], runs: list[d
             if "ASSUMPTION:" in line and not re.search(r"ASSUMPTION:\s*A-\d{2}", line):
                 errors.append(f"ERROR: {s['file'].relative_to(ROOT)}: assumption tag needs ID A-01")
     for r in runs:
+        if not re.fullmatch(r"\d{8}-\d{6}-RUN(?:-\d{2})?", r["id"]):
+            errors.append(f"ERROR: {r['path'].relative_to(ROOT)}: run ID must use YYYYMMDD-HHMMSS-RUN format")
+        if r["path"].stem != r["id"]:
+            errors.append(f"ERROR: {r['path'].relative_to(ROOT)}: run filename must match its ID")
         if r["result"] not in RUN_RESULTS:
             errors.append(f"ERROR: {r['path'].relative_to(ROOT)}: invalid result {r['result']}")
         if r["type"] not in {"CHECK", "PROBE", "IMPLEMENTATION"}:
@@ -393,13 +420,18 @@ def main() -> int:
     parser.add_argument("--sync", action="store_true", help="Regenerate the tracker and digest.")
     parser.add_argument("--digest", action="store_true", help="Regenerate only the digest.")
     parser.add_argument("--validate", action="store_true", help="Validate StageSet files.")
-    parser.add_argument("--escalate", metavar="CHECK-ID", help="Build an escalation after three failed attempts.")
+    parser.add_argument("--new-run-id", action="store_true", help="Print a timestamp-based run ID for a new report.")
+    parser.add_argument("--escalate", metavar="CHECK-ID", help="Build a timestamp-based escalation after three failed attempts.")
     args = parser.parse_args()
     try:
         work = load_workspace(validate=args.validate)
         skeletons = all_skeletons(work)
         runs, run_issues = run_rows(work)
         events, event_issues = event_rows(work)
+        if args.new_run_id:
+            run_id, _ = timestamp_id("RUN", work["runs_dir"], work["timezone"])
+            print(run_id)
+            return 0
         if args.escalate:
             path = create_escalation(work, args.escalate, skeletons, runs)
             print(f"Created {path.relative_to(ROOT)}")
