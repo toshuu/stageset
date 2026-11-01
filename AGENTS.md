@@ -1,18 +1,21 @@
 # Instructions for coding agents
 
-This workspace uses StageSet. Read these files before you inspect or change project code:
+This workspace uses StageSet. Before you inspect or change project code, read:
 
-1. `STAGESET.md`
-2. `.stageset/config.yml`
-3. `coder-rules.md`
-4. `.stageset/sessions-tracker.md`
+1. `.stageset/DIGEST.md`.
+2. `.stageset/facts.md`.
+3. `STAGESET.md`.
+4. `.stageset/config.yml`.
+5. `coder-rules.md`.
+6. `.stageset/sessions-tracker.md`.
+7. Open blockers and their run reports.
 
-Then inspect the relevant files in `Ideas/`, `Skeletons/`, and the configured code directory.
+Run `python scripts/stageset-status.py` to find ready skeletons. Read each full skeleton and its linked idea files before you implement it.
 
-Use `python scripts/stageset-status.py` to find skeletons that need implementation. If Python is not available, use the search and revision rules in `coder-rules.md`.
+Follow the skeleton and its checks. Verify every `ASSUMPTION:` before you rely on it. Save one run report for each check attempt. Keep observed facts separate from guesses.
 
-Treat a ready skeleton as the implementation contract. Do not guess when it is unclear. Keep existing functionality unless the approved plan requires a change.
+Stop after three failed attempts for one check. Set the skeleton to `BLOCKED`, set `blocker_ref` to the third run report, and create an escalation file with `--escalate CHECK-ID`. Do not redesign the feature.
 
-Use ASD-STE100-style English in project documentation, comments, and session summaries. Keep code syntax and identifiers exact.
+After each focused coding session, create one event file in `.stageset/sessions/`. Run `python scripts/stageset-status.py --sync` and then `python scripts/stageset-status.py --validate`. Do not edit the generated tracker or digest by hand.
 
-At the end of each focused coding session, update the global session tracker. Record a push only after the remote push succeeds.
+Record a `PUSH` event only after a remote push succeeds. Use ASD-STE100-style English in project documents, comments, run reports, and event summaries.

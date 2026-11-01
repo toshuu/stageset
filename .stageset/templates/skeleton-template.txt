@@ -1,52 +1,96 @@
-STAGESET SKELETON HEADER TEMPLATE
+STAGESET SKELETON TEMPLATE — VERSION 2
 
-Copy these fields into the normal comment syntax for the target language.
-Keep the field names exact. Keep one field on each comment line.
+Use the normal comment syntax for the target language.
+Keep the field names exact. Keep one metadata field on each comment line.
 
-@stageset version: 1
-@stageset target: path/relative/to/code-root
-@stageset source_idea: <IDEA-ID>
-@stageset status: READY
-@stageset priority: P2
-@stageset spec_revision: 1
-@stageset implemented_revision: 0
-@stageset planned_in: SS-XXXXXX
-@stageset last_updated_in: SS-XXXXXX
-@stageset implemented_in: -
+IMPLEMENTATION EXAMPLE
 
-Example for JavaScript or TypeScript:
-
-// @stageset version: 1
+// @stageset version: 2
+// @stageset kind: IMPLEMENTATION
 // @stageset target: src/example.ts
-// @stageset source_idea: <IDEA-ID>
+// @stageset source_idea: IDEA-0001
 // @stageset status: READY
 // @stageset priority: P2
 // @stageset spec_revision: 1
 // @stageset implemented_revision: 0
-// @stageset planned_in: SS-XXXXXX
-// @stageset last_updated_in: SS-XXXXXX
+// @stageset planned_in: .stageset/sessions/ideation-example.md
+// @stageset last_updated_in: .stageset/sessions/ideation-example.md
 // @stageset implemented_in: -
+// @stageset blocker_ref: -
+// @stageset resolution_of: -
 
-Example for Python:
+# PYTHON EXAMPLE
 
-# @stageset version: 1
+# @stageset version: 2
+# @stageset kind: IMPLEMENTATION
 # @stageset target: src/example.py
-# @stageset source_idea: <IDEA-ID>
+# @stageset source_idea: IDEA-0001
 # @stageset status: READY
 # @stageset priority: P2
 # @stageset spec_revision: 1
 # @stageset implemented_revision: 0
-# @stageset planned_in: SS-XXXXXX
-# @stageset last_updated_in: SS-XXXXXX
+# @stageset planned_in: .stageset/sessions/ideation-example.md
+# @stageset last_updated_in: .stageset/sessions/ideation-example.md
 # @stageset implemented_in: -
+# @stageset blocker_ref: -
+# @stageset resolution_of: -
 
-Metadata rules:
-- `target` is relative to the configured code directory.
+REQUIRED SKELETON SECTIONS
+
+## Purpose
+
+State the one file's purpose.
+
+## Contract
+
+State the required inputs, outputs, and side effects.
+
+## Structure
+
+Define the functions, classes, types, and their responsibilities.
+
+## Pseudo-code
+
+Write the exact flow. Include branches and error handling.
+
+## Assumptions
+
+Use this exact format for each unverified assumption:
+
+ASSUMPTION: A-01 — The package exposes method X. [UNVERIFIED]
+
+The coder must verify every assumption before it relies on it. The coder must record the result and evidence in a run report.
+
+## Edge cases
+
+List inputs and states that can fail.
+
+## Checks
+
+### CHECK-EXAMPLE-01 — Replace with a test name
+
+- Command: `python -m pytest -q tests/test_example.py`
+- Predicted output: `1 passed`
+- Pass condition: The command exits with code 0 and reports one passed test.
+- Fail condition: The command exits with a non-zero code or the result differs from the prediction.
+
+## References
+
+Link the idea document and the related source files.
+
+METADATA RULES
+
+- `kind` is `IMPLEMENTATION` or `PROBE`.
+- `target` is relative to the configured code directory. A probe uses `-`.
 - `source_idea` is an idea ID or `-`.
 - `status` is DRAFT, READY, IN_PROGRESS, DONE, BLOCKED, or SUPERSEDED.
-- `spec_revision` starts at 1 and increases when the plan changes.
-- `implemented_revision` starts at 0 and changes only after implementation passes its checks.
-- `planned_in` is the latest ideation event that prepared this revision.
-- `last_updated_in` is the latest event that changed this skeleton file.
-- `implemented_in` is the coding event that implemented the current revision, or `-`.
 - `priority` is P0, P1, P2, or P3.
+- `spec_revision` starts at 1 and increases when the plan changes.
+- `implemented_revision` starts at 0 and changes only after the full revision passes its checks.
+- `planned_in`, `last_updated_in`, and `implemented_in` are event file paths or `-`.
+- `blocker_ref` is a path under `.stageset/runs/` or `-`.
+- `resolution_of` is a run ID such as RUN-000003 or `-`.
+
+Keep one target file per implementation skeleton. Keep the plan focused. Split unrelated files into separate skeletons. Use a sidecar named `target.ext.skeleton.md` when the target format does not support comments.
+
+A `BLOCKED` skeleton must include a valid `blocker_ref`. A non-blocked skeleton must use `blocker_ref: -`.

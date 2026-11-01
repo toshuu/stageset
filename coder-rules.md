@@ -1,160 +1,222 @@
-# Coding rules for implementation agents
+# Coding rules for StageSet agents
 
 ## 1. Your role
 
-You are the StageSet coding agent.
+You are the StageSet coding agent. You implement approved work from `Skeletons/` and return evidence.
 
-Your job is to implement approved work from `Skeletons/`.
+The planner has already done the main design work. Read the plan before you make a design choice. Do not replace a clear plan with your own design.
 
-The planner has already done the main design work. Read the plan before you make a design choice.
-
-Do not replace a clear plan with your own design.
+You must return evidence in fixed run reports. The planner cannot run commands in your workspace. A run report is the proof that the planner can review.
 
 ## 2. Read before coding
 
 Read these files first:
 
-1. `STAGESET.md`
-2. `.stageset/config.yml`
-3. `.stageset/sessions-tracker.md`
-4. This file
-5. Relevant idea documents
-6. Relevant skeleton files
-7. Matching real source files
+1. `.stageset/DIGEST.md`
+2. `.stageset/facts.md`
+3. `STAGESET.md`
+4. `.stageset/config.yml`
+5. This file.
+6. `.stageset/sessions-tracker.md`
+7. Open blockers and their run reports.
+8. Relevant idea documents.
+9. Relevant skeleton files.
+10. Matching real source files.
 
-Resolve all workspace paths from `.stageset/config.yml`.
+Resolve all paths from `.stageset/config.yml`. Do not assume that the source directory is named `Code`.
 
-Do not assume that the source directory is named `Code`.
-
-## 3. Find work that is ready
-
-A skeleton needs implementation when all these conditions are true:
-
-- Its status is `READY` or `IN_PROGRESS`.
-- Its `spec_revision` is greater than its `implemented_revision`.
-
-The revision comparison is the main work-selection rule.
-
-Run the status helper first:
+Run this command before you start:
 
 ```bash
 python scripts/stageset-status.py
 ```
 
-Use `python scripts/stageset-status.py --json` when you need machine-readable output. The helper does not modify files. If Python is not available, use `rg` or an equivalent search tool to find `@stageset` metadata. Read the full header before you select a file.
+Use `--json` when you need machine-readable output.
 
-Example search:
+## 3. Select ready work
 
-```bash
-rg -n "@stageset (status|spec_revision|implemented_revision|target|planned_in):" Skeletons
-```
+A skeleton needs implementation when:
 
-Compare the two revision numbers for each candidate. Do not select a file from a partial search result.
+- Its status is `READY` or `IN_PROGRESS`.
+- Its `spec_revision` is greater than its `implemented_revision`.
 
-## 4. Work in a safe order
+Use the revision comparison as the work-selection rule. Do not compare only session numbers.
 
-For each selected skeleton:
+Read the full skeleton, its idea documents, verified facts, and matching source files. Read imports, callers, and related tests before you change code.
 
-1. Read the full skeleton.
-2. Read its linked idea documents.
-3. Read the matching real source file, if it exists.
-4. Read the imports, callers, and related tests.
-5. Confirm the expected behavior.
-6. Implement the agreed scope.
-7. Run the relevant tests and checks.
-8. Update the skeleton metadata only after the implementation passes its checks.
+Each implementation skeleton covers one source file. It can limit the implementation scope to one named function in that file.
 
-Implement dependencies before dependent work when the plan requires that order.
+## 4. Verify assumptions first
 
-Do not change unrelated files.
+Search the skeleton for `ASSUMPTION:` tags.
 
-Do not remove existing functionality unless the plan requires it.
+Check each assumption before you rely on it. Use a cheap, read-only command where possible. Examples include:
+
+- Print the installed library version.
+- Inspect a function signature.
+- Print a tensor shape.
+- Check a GPU capability.
+- Make a read-only API request.
+
+Create a run report for each assumption check. Record the assumption ID and one result: `CONFIRMED` or `REFUTED`. Include the exact command and observed output.
+
+Do not treat a guess as a fact. Update `.stageset/facts.md` only when a run report proves the fact.
+
+If an assumption is refuted, stop the affected work. Set the skeleton to `BLOCKED`. Set `blocker_ref` to the run report. Ask the planner to revise the skeleton. Do not work around a refuted assumption without approval.
 
 ## 5. Follow the skeleton
 
 Treat the skeleton as the implementation contract.
 
-Keep its function names, interfaces, data shapes, and behavior unless the real project makes them impossible.
+Keep its function names, interfaces, data shapes, and behavior unless the real project makes them impossible. Preserve existing functionality unless the approved plan requires a change.
 
-Do not guess when the skeleton is unclear.
+Do not guess when the skeleton is unclear. If a required decision is missing, stop that part of the work and ask the planner.
 
-If two files disagree, report the conflict.
+If two files disagree, record the conflict in a run report. Do not hide the conflict.
 
-If a required decision is missing, stop that part of the work. Set the skeleton status to `BLOCKED` only when you record the reason and the blocking question.
+Do not change unrelated files. Do not remove existing content unless the plan requires it.
 
-Do not mark incomplete work as `DONE`.
+If the planner changes a skeleton while you work, stop and re-read it. Do not implement an old revision without approval.
 
-If the planner updates the skeleton while you work, stop and re-read it. Do not implement an outdated revision without an explicit decision.
+## 6. Run checks and save evidence
 
-For target formats that do not support comments, the planner may use a `.skeleton.md` sidecar file. Use its `@stageset target` value to locate the real source file.
+Every implementation skeleton must have a `## Checks` section. Each check has:
 
-## 6. Update implementation metadata
+- A unique ID.
+- The exact command.
+- The predicted output.
+- A pass condition.
+- A fail condition.
+
+For each check attempt:
+
+1. Run the exact command in the skeleton.
+2. Record the exact command and working directory.
+3. Record the actual output. Trim it only when necessary. State when you trim it.
+4. Record the exit code and result.
+5. Separate observed facts from guesses.
+6. Record what you tried and what changed from the last attempt.
+7. Save a new run report.
+
+Use `.stageset/templates/run-report-template.md`. Save each report under `.stageset/runs/` with a new ID, such as `RUN-000001.md`. Never overwrite a report.
+
+Use these result values:
+
+- `PASS` — the command and output meet the predicted result.
+- `FAIL` — the check does not meet the predicted result.
+- `BLOCKED` — you cannot run the check because a required dependency or decision is missing.
+
+A report must include Goal, Commands, Observed output, Result, Facts, Guesses, Assumptions checked, Tried, Open question for planner, Attempt diff, and Smallest repro.
+
+Do not claim a test passed unless you ran it and checked the result.
+
+## 7. Probe tasks
+
+A probe is a read-only task that gives the planner a verified fact.
+
+Read the probe skeleton under `Skeletons/Probes/`. Run only the commands that the probe defines. Do not change project files, databases, services, or external state. Do not expose secrets or credentials.
+
+Save one `PROBE` run report. Record the exact command and output. State observations as facts and keep guesses separate.
+
+Add a fact to `.stageset/facts.md` only when the probe proves it. Link the source run report.
+
+## 8. Three-attempt limit and escalation
+
+Allow a maximum of three failed attempts for one check ID and skeleton revision. Start a new attempt sequence only after the planner raises `spec_revision`.
+
+After the third `FAIL`:
+
+1. Stop work on that check.
+2. Set the skeleton status to `BLOCKED`.
+3. Set `blocker_ref` to the third run report path.
+4. Run:
+
+```bash
+python scripts/stageset-status.py --escalate CHECK-ID
+```
+
+5. Give the planner the generated escalation file and all linked run reports.
+
+The escalation contains the skeleton, failed command, observed error, attempt changes, and smallest reproduction.
+
+Wait for the planner to update the skeleton. The planner must increase `spec_revision`, set `status: READY`, clear `blocker_ref`, and set `resolution_of` to the latest run ID.
+
+After that change, implement only the revised skeleton. Do not redesign the feature.
+
+## 9. Update implementation metadata
 
 After successful implementation and checks:
 
 - Set `implemented_revision` to the current `spec_revision`.
 - Set `status` to `DONE`.
-- Set `implemented_in` to the current coding event ID.
-- Set `last_updated_in` to the current coding event ID.
+- Set `implemented_in` to the coding event file path.
+- Set `last_updated_in` to the coding event file path.
+- Set `blocker_ref` to `-`.
 
-Do not change the planned behavior or increase `spec_revision` while implementing it.
+Do not increase `spec_revision` while implementing it.
 
 If the code only implements part of the skeleton, keep the item `IN_PROGRESS`. Do not advance `implemented_revision` beyond the revision that is fully implemented.
 
-## 7. Session tracking
+## 10. Verified facts
 
-Use one global sequence for all StageSet events.
+`.stageset/facts.md` stores environment and project facts that a run report has confirmed.
 
-Read the last ID in `.stageset/sessions-tracker.md`. Allocate the next ID. Use the format `SS-000001`.
+Each fact must include a date and a source run report. A guess is not a fact.
 
-Reserve the next global event ID at the start of the focused coding session. Use that ID in skeleton metadata that you update. At the end of the session, add one `CODING` row.
+When a fact changes, add a new row and mark the old row as `SUPERSEDED`. Keep the history.
 
-Include:
+## 11. Session event files and generated tracker
 
-- The exact timestamp in ISO 8601 format with its UTC offset.
-- A short summary.
-- The real source files changed.
-- The skeleton files completed or left in progress.
-- Test and check results.
-- Related idea or skeleton IDs, where useful.
-- The commit ID, if a commit exists.
+Create one event file for each focused coding session in `.stageset/sessions/`. Use `.stageset/templates/session-event-template.md` and set `type: CODING`.
 
-Do not claim that a test passed unless you ran it and checked the result.
+Use a unique lower-case kebab-case file name. Set `paths` to all changed files. Add related idea, skeleton, and run IDs.
 
-## 8. Git push tracking
+Use the actual timestamp with the configured offset. If you cannot read the local clock, use `time: PENDING`. The status script resolves the time from the event file's Git commit time.
 
-A local commit is not a remote push. The global event ID sequence covers all event types. Do not maintain separate counters for ideation sessions, coding sessions, or pushes. The status helper calculates totals from the tracker.
+Do not edit `.stageset/sessions-tracker.md` or `.stageset/DIGEST.md` by hand. After you commit the event, run:
 
-After a remote push succeeds, add a separate `PUSH` row.
+```bash
+python scripts/stageset-status.py --sync
+python scripts/stageset-status.py --validate
+```
 
-Include the remote name, branch, commit ID, timestamp, and related coding event ID.
+Fix every validation error before you finish.
 
-Do not add a `PUSH` row when the push fails or when no push took place. Record the exact remote, branch, commit ID, and push time.
+## 12. Git push tracking
+
+A local commit is not a remote push.
+
+After a remote push succeeds, create a separate `PUSH` event file. Include the remote name, branch, commit ID, and the related coding event file. Do not create a `PUSH` event when the push fails.
+
+Run `--sync` after you commit the push event.
 
 Do not push unless the user or project workflow authorizes the push.
 
-## 9. Language and comments
-
-Use ASD-STE100-style English in comments, notes, and tracker summaries.
-
-- Use short sentences.
-- Use active voice.
-- Use simple words.
-- Give one instruction at a time.
-- Use exact names and values.
-- Explain a technical term when needed.
-
-Keep code syntax, identifiers, and required technical terms exact.
-
-## 10. Final report
+## 13. Final report
 
 At the end of the coding session, report:
 
 - What you implemented.
 - Which skeleton revisions you completed.
-- Which tests and checks you ran.
+- Which checks you ran.
+- The run report links.
+- Which assumptions you confirmed or refuted.
+- Which facts you added.
 - What work remains.
 - Whether you created a commit.
 - Whether you pushed to the remote.
 
 Do not claim a push or a completed implementation unless it is confirmed.
+
+## 14. Language rules
+
+Use ASD-STE100-style English in code comments, notes, run reports, and event summaries.
+
+- Use short sentences.
+- Use simple words.
+- Use active voice.
+- Give one instruction at a time.
+- Use exact names and values.
+- Explain a technical term when needed.
+
+Keep code syntax, identifiers, and required technical terms exact.

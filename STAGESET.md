@@ -2,57 +2,100 @@
 
 ## 1. Purpose
 
-StageSet separates planning from implementation.
+StageSet separates planning from implementation. A strong planner can design the work first. A smaller coding model can then implement that plan.
 
-A planner uses a capable model to think through a feature. The planner records clear decisions in `Ideas/`. The planner also writes implementation blueprints in `Skeletons/`.
+StageSet stores four kinds of information:
 
-A coding agent reads the blueprints before it changes real code. The coding agent works in the configured code directory.
+| Location | Purpose |
+| --- | --- |
+| `Ideas/` | What the project needs and why. |
+| `Skeletons/` | How one source file or one probe must work. |
+| Configured code folder | The real application code. |
+| `.stageset/` | Rules, evidence, facts, run reports, and session history. |
 
-This lets a smaller coding model work from a clear plan. It does not need to repeat the full design process.
+The planner and coder use the same files and rules. The run reports connect their work. A planner does not need to run code to review evidence. A coder does not need to repeat the full design process.
 
-## 2. The three workspace areas
+## 2. Roles
+
+### Planner
+
+The planner can be ChatGPT, Claude, or another chat model.
+
+The planner:
+
+- Reads the current digest, facts, ideas, skeletons, and relevant source code.
+- Discusses ideas with the user.
+- Records approved decisions in `Ideas/`.
+- Writes detailed implementation skeletons in `Skeletons/`.
+- Writes small read-only probe tasks when it needs verified facts.
+- Reads run reports when the coder finds a blocker.
+- Does not claim that a test passed without a run report.
+
+### Coder
+
+The coder is an agent that can inspect files and run commands.
+
+The coder:
+
+- Reads the digest, facts, and approved skeletons.
+- Checks assumptions before it relies on them.
+- Runs the exact checks in each skeleton.
+- Saves one run report for every check attempt or probe.
+- Updates facts only when a run report proves them.
+- Stops after three failed attempts for one check.
+- Does not redesign a feature when a skeleton is unclear.
+
+## 3. The three workspace areas
 
 | Area | Purpose | Content |
 | --- | --- | --- |
-| `Ideas/` | Explain what and why | Markdown plans, requirements, decisions, research, and open questions |
-| `Skeletons/` | Explain how code should work | Pseudo-code, interfaces, function outlines, data shapes, comments, and edge cases |
-| Configured code folder | Hold the actual implementation | Working application source code |
+| `Ideas/` | Explain what and why | Requirements, decisions, research, risks, and open questions. |
+| `Skeletons/` | Explain how code should work | Pseudo-code, types, function outlines, data shapes, checks, and edge cases. |
+| Configured code folder | Hold the actual implementation | Working application source code. |
 
 Do not put real application code in `Skeletons/`. Do not use `Ideas/` as a substitute for a code blueprint.
 
-## 3. Mirrored file paths
+## 4. Folder layout
 
-The relative directory path of a skeleton must match the relative directory path of its target source file.
-
-Example:
+The default layout is:
 
 ```text
-Code/
-  src/
-    audio/
-      router.ts
-
-Skeletons/
-  src/
-    audio/
-      router.ts
+my-workspace/
+├── AGENTS.md
+├── CHATGPT.md
+├── CLAUDE.md
+├── PLANNER-START.md
+├── README.md
+├── STAGESET.md
+├── ideations-rules.md
+├── coder-rules.md
+├── Ideas/
+├── Skeletons/
+│   └── Probes/
+├── Code/
+├── .stageset/
+│   ├── config.yml
+│   ├── DIGEST.md                 # Generated
+│   ├── facts.md                  # Verified facts
+│   ├── formats.md
+│   ├── sessions-tracker.md       # Generated
+│   ├── sessions/                 # One event file per session
+│   ├── runs/                     # One report per command run
+│   ├── escalations/              # Generated after 3 failed attempts
+│   └── templates/
+└── scripts/
+    └── stageset-status.py
 ```
 
-The skeleton at `Skeletons/src/audio/router.ts` describes the real file at `Code/src/audio/router.ts`.
+The `Code/` folder is only the default. You can change it to any folder or use `.` as the code root.
 
-The configured workspace paths can change. The mirror rule does not change.
-
-A skeleton can describe a new file that does not exist in the code directory yet.
-
-## 4. Custom workspace paths
-
-StageSet does not require the real source folder to be named `Code`.
+## 5. Custom workspace paths
 
 Edit `.stageset/config.yml` to set `workspace.root`, `code_dir`, `ideas_dir`, and `skeletons_dir`.
 
-All four values are paths relative to the repository root, except that the three directory values are resolved relative to `workspace.root`.
+All four values are paths. `workspace.root` is relative to the repository root. The other three paths are relative to `workspace.root`.
 
-For a project folder named `custom-hyper`, where the real source files, `Ideas/`, and `Skeletons/` all live inside that folder, use:
+If your project code lives in `custom-hyper/` and you want `Ideas/` and `Skeletons/` inside it, use:
 
 ```yaml
 workspace:
@@ -62,20 +105,20 @@ workspace:
   skeletons_dir: "Skeletons"
 ```
 
-This means the layout is:
+The result is:
 
 ```text
-custom-hyper/
-  Ideas/
-  Skeletons/
-  ...real source files...
+my-workspace/
+├── .stageset/
+├── scripts/
+└── custom-hyper/
+    ├── Ideas/
+    ├── Skeletons/
+    ├── src/
+    └── ...real project files...
 ```
 
-Keep `.stageset/` and `scripts/` at the repository root. The tracker path is relative to the repository root. The other workspace paths are relative to `workspace.root`.
-
-### Alternative: code in a subfolder, planning folders at the repository root
-
-If the code is in `custom-hyper/` but `Ideas/` and `Skeletons/` stay at the repository root, use:
+If the code lives in `custom-hyper/` but planning folders stay at the repository root, use:
 
 ```yaml
 workspace:
@@ -85,40 +128,35 @@ workspace:
   skeletons_dir: "Skeletons"
 ```
 
-Choose one layout. Do not move the folders without updating the configuration.
+Keep `.stageset/` and `scripts/` at the repository root. The tracking and evidence paths in the config are relative to the repository root.
 
-## 5. The session tracker
+## 6. File path and skeleton rules
 
-`.stageset/sessions-tracker.md` is the shared activity record.
+An implementation skeleton mirrors the path of its target source file.
 
-It records these event types:
+Example:
 
-- `IDEATION` — one focused planning session.
-- `CODING` — one focused implementation session.
-- `PUSH` — one confirmed push to a remote Git repository.
-- `MAINTENANCE` — a StageSet structure or metadata change.
+```text
+Code/src/audio/router.ts
+Skeletons/src/audio/router.ts
+```
 
-Every row gets one global ID. Start with `SS-000001`. Increase the number by one for every new row. Do not reuse an ID. Reserve the next ID at the start of a focused session. Re-read the tracker before saving if another person or agent may have changed it.
+The skeleton at `Skeletons/src/audio/router.ts` describes `Code/src/audio/router.ts`.
 
-The tracker is the source of truth for session order. Use the status helper to count event types. Do not keep separate counters that can become inconsistent.
+Set `@stageset target` to the path relative to the configured code directory. A target can be new and does not need to exist yet.
 
-Use an ISO 8601 timestamp with the configured timezone and UTC offset. The default timezone is `Asia/Kolkata`.
+For a target that does not support comments, use a Markdown sidecar file. Add `.skeleton.md` after the target file name. For example, `Skeletons/config/settings.json.skeleton.md` describes `Code/config/settings.json`.
 
-Only add a `PUSH` row after the remote push succeeds. A local commit is not a push.
+Keep one target source file per implementation skeleton. If one source file is too large to plan as a whole, limit the skeleton to one function in that file. State the function name in `Purpose` and `Contract`. Split unrelated files into separate skeletons. Keep each skeleton small and precise.
 
-The helper `scripts/stageset-status.py` reads the tracker and calculates event totals. Do not keep separate manual totals. It also lists skeletons that need implementation.
+## 7. Revisions and implementation state
 
-## 6. Skeleton revision tracking
+Each implementation skeleton has two revision numbers:
 
-Each source skeleton has a small metadata header inside its normal language comments. Use the exact field names shown in `.stageset/templates/skeleton-template.txt`.
+- `spec_revision` — the latest planned version.
+- `implemented_revision` — the version that the real code fully implements.
 
-The most important fields are:
-
-- `spec_revision` — the current version of the plan for this file.
-- `implemented_revision` — the version that the real code currently implements.
-- `status` — the current implementation state.
-
-A coding agent must implement a skeleton when all these conditions are true:
+A skeleton is ready for coding when:
 
 ```text
 status is READY or IN_PROGRESS
@@ -126,97 +164,208 @@ AND
 spec_revision > implemented_revision
 ```
 
-The normal ready state is `READY`. A coding agent can also continue an item with status `IN_PROGRESS`.
+After the coder implements and verifies the complete revision:
 
-After it implements and verifies a revision, the coding agent sets `implemented_revision` to `spec_revision` and sets `status` to `DONE`.
+- Set `implemented_revision` to `spec_revision`.
+- Set `status` to `DONE`.
+- Set `implemented_in` to the coding event file path.
 
-When a planner changes a skeleton after implementation, the planner must increase `spec_revision`, set `status` to `READY`, and record the new planning session. The planner must not lower `implemented_revision`.
+When the planner changes a skeleton:
 
-This revision check is more reliable than comparing only session numbers. It identifies the exact skeleton files that have new work.
+- Increase `spec_revision` by one.
+- Keep `implemented_revision` unchanged.
+- Set `status` to `READY` when the plan is clear.
+- Update `planned_in` and `last_updated_in` with the session event file path.
+- Keep the implementation history.
 
-## 7. Status values
+Never mark a skeleton as `DONE` before the checks pass.
 
-Skeleton status values:
+## 8. Checks are test contracts
 
-| Status | Meaning |
-| --- | --- |
-| `DRAFT` | The plan is not ready for implementation. |
-| `READY` | The plan is clear and ready for implementation. |
-| `IN_PROGRESS` | Implementation has started but is not complete. |
-| `DONE` | The real code implements the current skeleton revision. |
-| `BLOCKED` | A known issue prevents safe implementation. |
-| `SUPERSEDED` | A newer plan replaces this skeleton. |
+Every implementation skeleton must include a `## Checks` section.
 
-Idea status values:
+Each check must have a unique ID across the workspace. Use a name such as `CHECK-AUDIO-ROUTER-01`.
 
-| Status | Meaning |
-| --- | --- |
-| `DISCOVERY` | The idea is under discussion. |
-| `CLARIFIED` | The problem and expected result are clear. |
-| `DECIDED` | The main decision is approved. |
-| `READY_FOR_SKELETON` | The idea is ready for code-level planning. |
-| `SKELETONIZED` | The required skeletons exist. |
-| `IMPLEMENTED` | The related implementation is complete. |
-| `PARKED` | Work is paused. |
-| `REJECTED` | The idea will not be implemented. |
+Each check must state:
 
-## 8. Planning workflow
+- The exact command.
+- The predicted output.
+- The pass condition.
+- The fail condition.
 
-1. Read this file, the config, the session tracker, and relevant existing files.
-2. Review the real code and related skeletons before making a new plan.
-3. Discuss the idea. Do not write to the repository until the user asks to save or publish the result.
-4. Create or update the relevant Markdown files in `Ideas/`.
-5. When the design is clear, create or update the matching skeleton files in `Skeletons/`.
-6. Update skeleton metadata and the related idea links.
-7. Add one `IDEATION` row to the session tracker when the focused session is complete.
+A check must prove a clear result. Do not use vague checks such as "works correctly".
 
-A planning session can create an idea without creating a skeleton. Do not mark unclear work as `READY`.
+The coder records the exact command and observed output in a run report. The planner compares the report with the predicted output.
 
-## 9. Coding workflow
+## 9. Assumptions and verified facts
 
-1. Read this file, the config, `coder-rules.md`, and the latest session entries.
-2. Find every skeleton with `spec_revision > implemented_revision` and status `READY` or `IN_PROGRESS`.
-3. Read the related idea files and the matching real source files.
-4. Implement only the agreed scope.
-5. Run relevant checks and tests.
-6. Update the skeleton metadata after successful implementation.
-7. Add one `CODING` row to the tracker.
-8. Add a separate `PUSH` row only after a successful remote push.
+Use `ASSUMPTION:` for a claim that is not yet verified. Give it an ID.
 
-If a skeleton is unclear or conflicts with the real code, stop that part of the work. Record the blocker. Do not guess at a major design decision.
+Example:
 
-For files that do not support comments, use a Markdown sidecar skeleton. Name it by adding `.skeleton.md` after the target file name. For example, `Skeletons/config/settings.json.skeleton.md` can describe `Code/config/settings.json`. Keep the `@stageset target` value set to the exact target path. The folder path must still mirror the target folder path.
-
-## 10. File and writing rules
-
-- Use ASD-STE100-style English in all human-written project documents and comments.
-- Use short sentences.
-- Use one instruction per sentence.
-- Prefer active voice.
-- Use one name for one concept.
-- Explain an acronym at first use.
-- State assumptions and unresolved questions.
-- Do not remove existing content unless the user approves the change.
-- Do not invent timestamps, test results, commits, or push results.
-
-Code syntax and required API names must remain exact. The writing rules do not change programming language syntax.
-
-## 11. Status helper
-
-Run the status helper before a coding session:
-
-```bash
-python scripts/stageset-status.py
+```text
+ASSUMPTION: A-01 — The installed library returns a tensor with shape [1, 80, 300]. [UNVERIFIED]
 ```
 
-Use `--json` when an agent needs machine-readable output. The helper does not change any file. It reads the configuration, scans skeleton metadata, and summarizes tracker events. If the helper reports a metadata or revision conflict, resolve that conflict before implementation.
+Before the coder relies on the assumption, it must check it. Use a cheap, read-only command where possible.
 
-## 12. Source of truth
+The coder records the result in a run report. Use `CONFIRMED` or `REFUTED`. Include the exact command and evidence. If an assumption is refuted, the coder stops the affected work and marks the skeleton as blocked. The planner must resolve it.
+
+Only confirmed facts belong in `.stageset/facts.md`. Each fact must link to a run report. Do not record guesses as facts.
+
+## 10. Probes
+
+A probe is a small, read-only task. Use it when the planner needs a fact that it cannot get from the repository alone.
+
+Examples:
+
+- Print library versions.
+- Inspect tensor shapes.
+- Check whether a device supports a data type.
+- Test a read-only API call.
+- Inspect an installed command or configuration.
+
+Store probe skeletons in `Skeletons/Probes/`. Use `kind: PROBE` and `target: -`.
+
+A probe must not change project files, databases, services, or external state. It must not expose credentials or secrets.
+
+The coder runs the probe and saves a `PROBE` run report. The planner uses the result to make an informed decision.
+
+## 11. Run reports and evidence
+
+Store one report for each check attempt or probe in `.stageset/runs/`.
+
+Use the next unique ID, such as `RUN-000001`. Never overwrite a report. Set `spec_revision` to the exact skeleton revision that the report checks. Start `attempt` at 1 for each check and skeleton revision.
+
+Use `.stageset/templates/run-report-template.md`. Every report must include:
+
+- Goal.
+- Exact commands.
+- Observed output.
+- Result: `PASS`, `FAIL`, or `BLOCKED`.
+- Facts.
+- Guesses.
+- Assumptions checked.
+- Actions tried.
+- Open question for the planner.
+- Attempt diff.
+- Smallest reproduction, when relevant.
+
+Keep facts and guesses separate. Trim output only when necessary. State when you trim it.
+
+The coder must not report a pass without the actual result. The planner must not treat a guess as evidence.
+
+## 12. Blockers and escalation
+
+Allow a maximum of three attempts for one check and skeleton revision. Start a new attempt sequence only after the planner raises `spec_revision`.
+
+After the third failed attempt, the coder must:
+
+1. Stop work on that check.
+2. Set the skeleton status to `BLOCKED`.
+3. Set `blocker_ref` to the third run report path.
+4. Run `python scripts/stageset-status.py --escalate CHECK-ID`.
+5. Send the generated escalation file and run reports to the planner.
+
+The escalation file contains the skeleton, failed command, observed errors, attempt changes, and smallest reproduction.
+
+The planner reads the evidence. The planner updates the skeleton to resolve the problem. The planner increases `spec_revision`, sets `status: READY`, sets `blocker_ref: -`, and sets `resolution_of` to the latest run ID.
+
+The coder implements only the revised skeleton. The coder must not redesign the feature.
+
+## 13. Session events and generated tracker
+
+Store one event file for each focused session in `.stageset/sessions/`.
+
+Use `.stageset/templates/session-event-template.md`. Allowed event types are:
+
+- `IDEATION`
+- `PROBE`
+- `CODING`
+- `PUSH`
+- `MAINTENANCE`
+
+A chat app that cannot read the local clock must set `time: PENDING`. After the event file is committed, the script reads the Git commit time.
+
+The event file path is the stable reference used by skeleton metadata. The generated event ID uses `YYYYMMDD-HHMMSS-TYPE`. The script adds a numeric suffix only when IDs collide.
+
+The script generates `.stageset/sessions-tracker.md`. Do not edit it by hand. The tracker is one view of the event files.
+
+A local commit is not a push. Add a `PUSH` event only after the remote push succeeds. Include the remote, branch, and commit ID.
+
+## 14. Digest and status commands
+
+The digest is the first file that a phone planner should read. It shows:
+
+- Ready skeletons.
+- Open blockers.
+- Failing checks.
+- The last five sessions.
+- Verified environment facts.
+
+Run these commands from the repository root:
+
+```bash
+# Show ready work, blockers, and event totals.
+python scripts/stageset-status.py
+
+# Print machine-readable status.
+python scripts/stageset-status.py --json
+
+# Rebuild the tracker and digest after you add event, run, or skeleton files.
+python scripts/stageset-status.py --sync
+
+# Rebuild only the digest.
+python scripts/stageset-status.py --digest
+
+# Check file formats, paths, statuses, reports, and generated files.
+python scripts/stageset-status.py --validate
+
+# Build an escalation file after three failed attempts.
+python scripts/stageset-status.py --escalate CHECK-AUDIO-ROUTER-01
+```
+
+The script uses only the Python standard library. It does not run project code. `--validate` reports unresolved `PENDING` times when a file has no Git commit.
+
+Run `--sync` after the new session or run files are committed. Then run `--validate`.
+
+## 15. Rollback and history
+
+StageSet changes are normal Git commits. Keep the base repository and its history. Do not delete old session events or run reports.
+
+The repository maintains a pre-evidence snapshot branch named `backup/pre-evidence-workflow-2026-11-01`. To inspect that version in a clone:
+
+```bash
+git fetch origin
+git switch -track origin/backup/pre-evidence-workflow-2026-11-01
+```
+
+To undo a later change on `main`, revert the relevant commit. Do not force-push over shared history.
+
+## 16. Source of truth
 
 - `Ideas/` records intent and decisions.
-- `Skeletons/` records the planned code shape and expected behavior.
-- The configured code directory records what is actually implemented.
-- `.stageset/sessions-tracker.md` records the order of work and confirmed pushes.
-- `.stageset/config.yml` records the workspace paths and shared settings.
+- `Skeletons/` records the planned code shape and test contract.
+- The configured code directory records what is implemented.
+- `.stageset/runs/` records observed command results.
+- `.stageset/facts.md` records facts that run reports prove.
+- `.stageset/sessions/` records the source event files.
+- `.stageset/sessions-tracker.md` is a generated view of session events.
+- `.stageset/DIGEST.md` is a generated summary for planners and coders.
+- `.stageset/config.yml` records workspace paths and shared settings.
 
-When two sources disagree, do not hide the conflict. Report it and resolve it before implementation.
+When two sources disagree, report the conflict. Resolve it before implementation.
+
+## 17. Writing rules
+
+Use ASD-STE100-style English in all project documents, comments, skeletons, run reports, and event summaries.
+
+- Use short sentences.
+- Use simple words.
+- Use active voice.
+- Give one instruction at a time.
+- Use one name for one concept.
+- Explain technical terms when the reader may not know them.
+- State facts, assumptions, decisions, and questions separately.
+
+Keep code syntax, identifiers, and required technical terms exact.

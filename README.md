@@ -2,19 +2,11 @@
 
 StageSet is a planning-first workspace system for software projects built with AI.
 
-It keeps three layers separate:
+A capable model plans the work. It records decisions in `Ideas/` and writes file-level blueprints in `Skeletons/`. A smaller coding agent implements those blueprints in the configured code folder.
 
-| Folder | Purpose |
-| --- | --- |
-| `Ideas/` | What the project needs and why. |
-| `Skeletons/` | How each planned source file must work. |
-| Configured code folder | The real implementation. |
-
-A strong model can help with exploration and design. It records decisions in `Ideas/` and prepares detailed file-level blueprints in `Skeletons/`. A smaller coding model can then implement those blueprints without repeating the full design process.
+The planner and coder share evidence. The coder records exact commands and observed results in `.stageset/runs/`. The planner reads those reports. Verified environment facts live in `.stageset/facts.md`.
 
 ## Start a new workspace
-
-Clone this repository into a new project workspace:
 
 ```bash
 git clone https://github.com/toshuu/stageset.git my-workspace
@@ -23,42 +15,49 @@ cd my-workspace
 
 Then:
 
-1. Read [`STAGESET.md`](STAGESET.md).
-2. Edit [`.stageset/config.yml`](.stageset/config.yml) to match your folder layout.
-3. Read [`ideations-rules.md`](ideations-rules.md) before planning with ChatGPT or Claude.
-4. Read [`coder-rules.md`](coder-rules.md) before coding with an agent.
-5. Use [`PLANNER-START.md`](PLANNER-START.md) to start a planning chat.
-6. Run `python scripts/stageset-status.py` to see which skeletons need implementation.
+1. Read `.stageset/DIGEST.md`.
+2. Edit `.stageset/config.yml` to match your folder layout.
+3. Read `STAGESET.md`.
+4. Read `CHATGPT.md` before planning in the ChatGPT app.
+5. Read `ideations-rules.md` before planning in ChatGPT or Claude.
+6. Read `coder-rules.md` before coding with an agent.
+7. Use `PLANNER-START.md` to start a planning chat.
+8. Run `python scripts/stageset-status.py` to see ready work.
 
-To make the workspace its own GitHub repository, create an empty repository for the project and change the `origin` remote before the first push. Keep this StageSet repository as the reusable base.
+Important: ChatGPT mobile and web apps do not automatically read `CHATGPT.md` from GitHub. Attach the file or provide repository access. Claude Code can use `CLAUDE.md`. Coding agents can use `AGENTS.md`.
 
 ## Folder layout
 
 ```text
 my-workspace/
-├── AGENTS.md                 # General coding-agent entry point
-├── CLAUDE.md                 # Claude Code entry point
-├── STAGESET.md               # Complete system guide
-├── ideations-rules.md        # Rules for ChatGPT, Claude, and planners
-├── coder-rules.md            # Rules for implementation agents
-├── PLANNER-START.md          # Prompt for a planning chat
-├── Ideas/                    # Project decisions and plans
-├── Skeletons/                # File-level implementation blueprints
-├── Code/                     # Default real source folder
+├── AGENTS.md
+├── CHATGPT.md
+├── CLAUDE.md
+├── PLANNER-START.md
+├── STAGESET.md
+├── ideations-rules.md
+├── coder-rules.md
+├── Ideas/
+├── Skeletons/
+│   └── Probes/
+├── Code/                         # Default real source folder
 ├── .stageset/
-│   ├── config.yml            # Workspace paths and shared settings
-│   ├── sessions-tracker.md   # One global activity log
-│   ├── formats.md            # IDs, revisions, and file formats
-│   └── templates/            # New idea, skeleton, and session templates
+│   ├── config.yml
+│   ├── DIGEST.md                 # Generated
+│   ├── facts.md                  # Verified facts
+│   ├── formats.md
+│   ├── sessions-tracker.md       # Generated
+│   ├── sessions/                 # One file per session event
+│   ├── runs/                     # One report per run
+│   ├── escalations/              # Built after 3 failed attempts
+│   └── templates/
 └── scripts/
-    └── stageset-status.py    # Find ready skeletons and summarize sessions
+    └── stageset-status.py
 ```
 
-The `Code/` folder is only the default. You can change it to any folder or use `.` as the code root.
+## Custom project folder
 
-## Existing project folder
-
-If your project code lives in `custom-hyper/` and you want `Ideas/` and `Skeletons/` inside that folder, set:
+If your real code and StageSet folders live inside `custom-hyper/`, use:
 
 ```yaml
 workspace:
@@ -68,54 +67,54 @@ workspace:
   skeletons_dir: "Skeletons"
 ```
 
-The result is:
+The folder names are configurable. The `.stageset/` and `scripts/` folders stay at the repository root.
+
+## Revision rule
+
+The coder finds work by comparing revisions:
 
 ```text
-my-workspace/
-├── .stageset/
-├── scripts/
-└── custom-hyper/
-    ├── Ideas/
-    ├── Skeletons/
-    ├── src/
-    └── ...real project files...
-```
-
-Keep `.stageset/` and `scripts/` at the repository root. The tracker path is relative to the repository root. The other workspace paths are relative to `workspace.root`.
-
-## Key rule: revisions, not guesswork
-
-Each skeleton has two revision numbers:
-
-- `spec_revision`: the latest planned version.
-- `implemented_revision`: the version that the real code fully implements.
-
-A skeleton is waiting for work when its status is `READY` or `IN_PROGRESS` and:
-
-```text
+status is READY or IN_PROGRESS
+AND
 spec_revision > implemented_revision
 ```
 
-Run the status helper to find this work:
+This identifies the skeletons that contain new work. It does not depend on a manual session-number comparison.
+
+## Evidence workflow
+
+1. The planner writes an idea and a detailed skeleton.
+2. The skeleton defines exact checks and predicted output.
+3. The coder verifies assumptions before it relies on them.
+4. The coder runs each check and saves one report per attempt.
+5. The coder records verified facts with links to run reports.
+6. After three failed attempts, the coder stops and creates an escalation file.
+7. The planner resolves the evidence and updates the skeleton revision.
+
+A probe is a small read-only task. It can verify a library version, tensor shape, GPU feature, or API behavior.
+
+## Useful commands
 
 ```bash
 python scripts/stageset-status.py
 python scripts/stageset-status.py --json
+python scripts/stageset-status.py --sync
+python scripts/stageset-status.py --digest
+python scripts/stageset-status.py --validate
+python scripts/stageset-status.py --escalate CHECK-ID
 ```
 
-The helper does not edit files. It uses only the Python standard library.
+The script uses only the Python standard library. It does not run project code. The `--sync` command generates the session tracker and digest. Do not edit those generated files by hand.
 
-## Session history
+## Rollback
 
-`.stageset/sessions-tracker.md` records ideation, coding, confirmed remote pushes, and maintenance events in one global sequence. The IDs look like `SS-000001`. The event type identifies the activity. The helper calculates totals from the tracker. Do not maintain separate counters by hand.
+The pre-evidence version is preserved on `backup/pre-evidence-workflow-2026-11-01`. Inspect it with:
 
-## Important boundaries
+```bash
+git fetch origin
+git switch --track origin/backup/pre-evidence-workflow-2026-11-01
+```
 
-- Brainstorming does not change files. Save only when the user asks.
-- Planners write intent in `Ideas/` and implementation plans in `Skeletons/`.
-- Coding agents change real source files and update skeleton implementation metadata only after checks pass.
-- A local commit is not a remote push.
-- Do not invent timestamps, test results, commit IDs, or push results.
-- Use ASD-STE100-style English in project documents, comments, and session summaries.
+Use Git commits to compare or revert later changes. Do not force-push over shared history.
 
-See [`STAGESET.md`](STAGESET.md) for the complete workflow and rules.
+See `STAGESET.md` for the full protocol.

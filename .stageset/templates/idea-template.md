@@ -3,10 +3,10 @@ id: IDEA-0001
 title: Replace with a clear title
 status: DISCOVERY
 priority: P2
-created_at: "YYYY-MM-DDTHH:mm:ss+05:30"
-updated_at: "YYYY-MM-DDTHH:mm:ss+05:30"
-created_in: SS-XXXXXX
-updated_in: SS-XXXXXX
+created_at: PENDING
+updated_at: PENDING
+created_in: .stageset/sessions/ideation-example.md
+updated_in: .stageset/sessions/ideation-example.md
 related_ideas: []
 related_skeletons: []
 ---
@@ -41,12 +41,16 @@ State the result that the user needs.
 
 ## Decisions
 
-| Decision | Reason | Date | Session |
+| Decision | Reason | Date | Event file |
 | --- | --- | --- | --- |
+
+## Facts
+
+- Add only facts that have evidence. Link the source run report.
 
 ## Assumptions
 
-- List assumptions that still need validation.
+- Use `ASSUMPTION: A-01 — ... [UNVERIFIED]` for an unverified claim.
 
 ## Open questions
 
@@ -62,4 +66,4 @@ State the result that the user needs.
 
 ## Related files
 
-- Add links to related idea, skeleton, and source files.
+- Add links to related idea, skeleton, run, and source files.

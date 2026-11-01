@@ -1,25 +1,27 @@
-# StageSet configuration. Workspace paths are resolved from workspace.root.
-# tracking.sessions_tracker is relative to the repository root.
-version: 1
+# StageSet configuration.
+# Workspace paths are resolved from workspace.root.
+# Tracking and evidence paths are resolved from the repository root.
+version: 2
 timezone: Asia/Kolkata
 
 workspace:
-  # Use the folder that contains the project workspace.
-  # Use "." when StageSet is at the project root.
   root: "."
-
-  # These paths are relative to workspace.root.
-  # Use code_dir: "." when real source files live directly in workspace.root.
   code_dir: "Code"
   ideas_dir: "Ideas"
   skeletons_dir: "Skeletons"
 
 tracking:
-  # This path is relative to the repository root. Do not move it into Ideas or Skeletons.
+  sessions_dir: ".stageset/sessions"
   sessions_tracker: ".stageset/sessions-tracker.md"
-  first_event_number: 1
-  event_id_prefix: "SS-"
-  event_id_digits: 6
+  event_id_format: "YYYYMMDD-HHMMSS-TYPE"
+  pending_time_source: "git-commit-time"
+
+runs:
+  reports_dir: ".stageset/runs"
+  escalation_dir: ".stageset/escalations"
+  facts_file: ".stageset/facts.md"
+  digest_file: ".stageset/DIGEST.md"
+  max_attempts_per_check: 3
 
 skeletons:
   ready_statuses:
