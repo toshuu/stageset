@@ -1,5 +1,5 @@
 ---
-id: RUN-000001
+id: YYYYMMDD-HHMMSS-RUN
 type: CHECK
 time: PENDING
 result: FAIL
