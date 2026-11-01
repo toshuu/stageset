@@ -312,7 +312,7 @@ def create_escalation(work: dict[str, Any], check_id: str, skeletons: list[dict[
     while True:
         try:
             with dest.open("x", encoding="utf-8") as handle:
-                handle.write("\\n".join(out))
+                handle.write("\n".join(out))
             break
         except FileExistsError:
             escalation_id, created_at = timestamp_id("ESCALATION", work["escalations_dir"], work["timezone"])
