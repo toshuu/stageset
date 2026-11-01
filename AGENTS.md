@@ -12,9 +12,9 @@ This workspace uses StageSet. Before you inspect or change project code, read:
 
 Run `python scripts/stageset-status.py` to find ready skeletons. Read each full skeleton and its linked idea files before you implement it.
 
-Follow the skeleton and its checks. Verify every `ASSUMPTION:` before you rely on it. Save one run report for each check attempt. Keep observed facts separate from guesses.
+Follow the skeleton and its checks. Verify every `ASSUMPTION:` before you rely on it. Generate a timestamp-based run ID with `python scripts/stageset-status.py --new-run-id`. Save one run report for each check attempt. Keep observed facts separate from guesses.
 
-Stop after three failed attempts for one check. Set the skeleton to `BLOCKED`, set `blocker_ref` to the third run report, and create an escalation file with `--escalate CHECK-ID`. Do not redesign the feature.
+Stop after three failed attempts for one check. Set the skeleton to `BLOCKED`, set `blocker_ref` to the third run report, and create an escalation file with `--escalate CHECK-ID`. Do not redesign the feature. If a required skeleton step is impossible, do not deviate silently. Set the skeleton to `BLOCKED` and link a run report that records the conflict.
 
 After each focused coding session, create one event file in `.stageset/sessions/`. Run `python scripts/stageset-status.py --sync` and then `python scripts/stageset-status.py --validate`. Do not edit the generated tracker or digest by hand.
 
