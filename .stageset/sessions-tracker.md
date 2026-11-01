@@ -16,4 +16,4 @@ The status helper calculates totals from the event types in this table. Do not m
 
 | ID | Type | Timestamp | Summary | Changed paths | Related ID | Commit / Push |
 | --- | --- | --- | --- | --- | --- | --- |
-| SS-000001 | MAINTENANCE | 2026-11-01T21:00:00+05:30 | Initialize the StageSet starter workspace. | `README.md`; `STAGESET.md`; `AGENTS.md`; `CLAUDE.md`; `ideations-rules.md`; `coder-rules.md`; `PLANNER-START.md`; `scripts/stageset-status.py`; `.stageset/` | - | - |
+| SS-000001 | MAINTENANCE | 2026-11-01T21:00:00+05:30 | Initialize the StageSet starter workspace. | `README.md`; `STAGESET.md`; `AGENTS.md`; `CLAUDE.md`; `PLANNER-START.md`; `ideations-rules.md`; `coder-rules.md`; `LICENSE`; `Code/`; `Ideas/`; `Skeletons/`; `.stageset/`; `scripts/stageset-status.py` | - | - |
