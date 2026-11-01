@@ -1,6 +1,11 @@
+---
+id: YYYYMMDD-HHMMSS-ESCALATION
+time: YYYY-MM-DDTHH:MM:SS+05:30
+---
+
 # Escalation: CHECK-ID
 
-This file records a check that failed three times. The status script can generate this file from the run reports.
+This file records a check that failed three times. The status script generates this file from run reports. It assigns a timestamp ID and writes the file as `.stageset/escalations/<id>.md`. Do not reuse an ID.
 
 ## Skeleton
 
