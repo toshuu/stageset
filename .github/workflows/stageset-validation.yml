@@ -1,0 +1,33 @@
+name: StageSet validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check Python syntax
+        run: python -m py_compile scripts/stageset-status.py
+
+      - name: Generate tracker and digest
+        run: python scripts/stageset-status.py --sync
+
+      - name: Validate StageSet workspace
+        run: python scripts/stageset-status.py --validate
