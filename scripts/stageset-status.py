@@ -285,7 +285,8 @@ def create_escalation(work: dict[str, Any], check_id: str, skeletons: list[dict[
            "## Attempts", ""]
     for r in failed[-3:]:
         out += [f"### {r['id']} — attempt {r.get('attempt')}", "", f"- Command: `{r.get('command', '')}`", "", "#### Observed output", "", heading_block(r["body"], "Observed output"), "", "#### Tried", "", heading_block(r["body"], "Tried"), "", "#### Attempt diff", "", heading_block(r["body"], "Attempt diff"), "", "#### Smallest repro", "", heading_block(r["body"], "Smallest repro"), ""]
-    out += ["## Planner action", "", f"Read the skeleton and these run reports: {', '.join(f'`{r['path'].relative_to(ROOT)}`' for r in failed[-3:])}.", "",
+    run_refs = ", ".join("`" + r["path"].relative_to(ROOT).as_posix() + "`" for r in failed[-3:])
+    out += ["## Planner action", "", f"Read the skeleton and these run reports: {run_refs}.", "",
             "Update the skeleton to resolve the verified blocker. Increase `spec_revision` by one. Keep `implemented_revision` unchanged. Set `status: READY`. Set `blocker_ref: -`. Set `resolution_of` to the latest run ID.", "",
             "The coder must implement only the revised skeleton. The coder must not redesign the feature.", ""]
     dest = work["escalations_dir"] / f"escalation-{check_id.lower()}-r{skel['spec']}-{latest['id'].lower()}.md"
