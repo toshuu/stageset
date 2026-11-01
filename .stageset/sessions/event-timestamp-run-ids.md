@@ -1,6 +1,6 @@
 ---
 type: MAINTENANCE
-time: PENDING
+time: 2026-11-01T23:19:47+05:30
 summary: Replace sequential run IDs with timestamp IDs and make skeleton deviations explicit blockers.
 paths: README.md; coder-rules.md; STAGESET.md; ideations-rules.md; AGENTS.md; .stageset/formats.md; .stageset/templates/run-report-template.md; .stageset/templates/escalation-template.md; .stageset/templates/session-event-template.md; .stageset/runs/README.md; .stageset/escalations/README.md; scripts/stageset-status.py
 related: -
