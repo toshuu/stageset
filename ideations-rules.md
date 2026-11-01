@@ -75,7 +75,7 @@ Use `.stageset/templates/idea-template.md`. Keep `Ideas/_index.md` current. Use 
 
 Give each idea a stable ID. Use the next unused ID, such as `IDEA-0001`. Name the file `IDEA-0001-short-title.md`. Add the file to `Ideas/_index.md` .
 
-ave a `## Checks` section.
+Each implementation skeleton must have a `## Checks` section.
 
 Give every check a unique ID across the workspace. Use a name such as `CHECK-AUDIO-ROUTER-01`.
 
