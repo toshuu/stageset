@@ -1,0 +1,52 @@
+STAGESET SKELETON HEADER TEMPLATE
+
+Copy these fields into the normal comment syntax for the target language.
+Keep the field names exact. Keep one field on each comment line.
+
+@stageset version: 1
+@stageset target: path/relative/to/code-root
+@stageset source_idea: <IDEA-ID>
+@stageset status: READY
+@stageset priority: P2
+@stageset spec_revision: 1
+@stageset implemented_revision: 0
+@stageset planned_in: SS-XXXXXX
+@stageset last_updated_in: SS-XXXXXX
+@stageset implemented_in: -
+
+Example for JavaScript or TypeScript:
+
+// @stageset version: 1
+// @stageset target: src/example.ts
+// @stageset source_idea: <IDEA-ID>
+// @stageset status: READY
+// @stageset priority: P2
+// @stageset spec_revision: 1
+// @stageset implemented_revision: 0
+// @stageset planned_in: SS-XXXXXX
+// @stageset last_updated_in: SS-XXXXXX
+// @stageset implemented_in: -
+
+Example for Python:
+
+# @stageset version: 1
+# @stageset target: src/example.py
+# @stageset source_idea: <IDEA-ID>
+# @stageset status: READY
+# @stageset priority: P2
+# @stageset spec_revision: 1
+# @stageset implemented_revision: 0
+# @stageset planned_in: SS-XXXXXX
+# @stageset last_updated_in: SS-XXXXXX
+# @stageset implemented_in: -
+
+Metadata rules:
+- `target` is relative to the configured code directory.
+- `source_idea` is an idea ID or `-`.
+- `status` is DRAFT, READY, IN_PROGRESS, DONE, BLOCKED, or SUPERSEDED.
+- `spec_revision` starts at 1 and increases when the plan changes.
+- `implemented_revision` starts at 0 and changes only after implementation passes its checks.
+- `planned_in` is the latest ideation event that prepared this revision.
+- `last_updated_in` is the latest event that changed this skeleton file.
+- `implemented_in` is the coding event that implemented the current revision, or `-`.
+- `priority` is P0, P1, P2, or P3.
