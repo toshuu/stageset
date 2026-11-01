@@ -96,7 +96,7 @@ For each check attempt:
 6. Record what you tried and what changed from the last attempt.
 7. Save a new run report.
 
-Use `.stageset/templates/run-report-template.md`. First run `python scripts/stageset-status.py --new-run-id`. Use the returned `YYYYMMDD-HHMMSS-RUN` ID for the report front matter and filename under `.stageset/runs/<id>.md`. The script adds a numeric suffix if it finds an existing ID for the same second. Never overwrite a report.
+Use `.stageset/templates/run-report-template.md`. First run `python scripts/stageset-status.py --new-run-id`. The command reserves a unique `YYYYMMDD-HHMMSS-RUN` ID. Use it for the report front matter and filename under `.stageset/runs/<id>.md`. After you save the report, delete `.stageset/runs/.<id>.reserve`. Do not delete the reservation before the report exists. Never overwrite a report.
 
 Use these result values:
 
