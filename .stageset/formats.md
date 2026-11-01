@@ -131,7 +131,7 @@ Use this table format:
 
 | Fact ID | Date | Verified fact | Scope | State | Source run |
 | --- | --- | --- | --- | --- | --- |
-| FACT-0001 | YYYY-MM-DD | Verified statement. | Environment or project scope. | CURRENT | `.stageset/runs/RUN-000001.md` |
+| FACT-0001 | YYYY-MM-DD | Verified statement. | Environment or project scope. | CURRENT | `.stageset/runs/YYYYMMDD-HHMMSS-RUN.md` |
 
 Use `CURRENT` or `SUPERSEDED` for State. If a fact changes, add a new fact and mark the old fact as `SUPERSEDED`. Keep the history. The source run must have a `PASS` result. Use a source path such as `.stageset/runs/YYYYMMDD-HHMMSS-RUN.md`.
 
