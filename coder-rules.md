@@ -10,18 +10,16 @@ You must return evidence in fixed run reports. The planner cannot run commands i
 
 ## 2. Read before coding
 
-Read these files first:
+Read `.stageset/DIGEST.md` first. It is the task index.
 
-1. `.stageset/DIGEST.md`
-2. `.stageset/facts.md`
-3. `STAGESET.md`
-4. `.stageset/config.yml`
-5. This file.
-6. `.stageset/sessions-tracker.md`
-7. Open blockers and their run reports.
-8. Relevant idea documents.
-9. Relevant skeleton files.
-10. Matching real source files.
+Then read only:
+- This file.
+- `.stageset/config.yml`.
+- The files that the digest links to and that apply to the current task.
+
+Read a linked blocker report before you work on that blocker. Read the matching idea, skeleton, and source file before you implement a task. Read imports, callers, and related tests only when the task needs them.
+
+Do not read every idea, skeleton, source file, fact, or session record at the start. Do not scan the whole repository without a reason. This keeps the context small.
 
 Resolve all paths from `.stageset/config.yml`. Do not assume that the source directory is named `Code`.
 
@@ -68,7 +66,7 @@ If an assumption is refuted, stop the affected work. Set the skeleton to `BLOCKE
 
 Treat the skeleton as the implementation contract.
 
-Keep its function names, interfaces, data shapes, and behavior unless the real project makes them impossible. Preserve existing functionality unless the approved plan requires a change.
+Keep its function names, interfaces, data shapes, and behavior unless the real project makes them impossible. Preserve existing functionality unless the approved plan requires a change. If any required skeleton step is impossible in the real project, do not silently deviate. Stop the affected work, write a run report with the exact conflict and observed evidence, set the skeleton to `BLOCKED`, set `blocker_ref` to that report, and ask the planner to revise the skeleton.
 
 Do not guess when the skeleton is unclear. If a required decision is missing, stop that part of the work and ask the planner.
 
@@ -98,7 +96,7 @@ For each check attempt:
 6. Record what you tried and what changed from the last attempt.
 7. Save a new run report.
 
-Use `.stageset/templates/run-report-template.md`. Save each report under `.stageset/runs/` with a new ID, such as `RUN-000001.md`. Never overwrite a report.
+Use `.stageset/templates/run-report-template.md`. First run `python scripts/stageset-status.py --new-run-id`. Use the returned `YYYYMMDD-HHMMSS-RUN` ID for the report front matter and filename under `.stageset/runs/<id>.md`. The script adds a numeric suffix if it finds an existing ID for the same second. Never overwrite a report.
 
 Use these result values:
 
