@@ -235,7 +235,7 @@ The coder runs the probe and saves a `PROBE` run report. The planner uses the re
 
 Store one report for each check attempt or probe in `.stageset/runs/`.
 
-Use the next unique ID, such as `RUN-000001`. Never overwrite a report. Set `spec_revision` to the exact skeleton revision that the report checks. Start `attempt` at 1 for each check and skeleton revision.
+Use a timestamp ID in the format `YYYYMMDD-HHMMSS-RUN`. Generate it with `python scripts/stageset-status.py --new-run-id`. Save the report as `.stageset/runs/<id>.md`. The script adds a numeric suffix if the same-second ID already exists. Never overwrite a report. Set `spec_revision` to the exact skeleton revision that the report checks. Start `attempt` at 1 for each check and skeleton revision.
 
 Use `.stageset/templates/run-report-template.md`. Every report must include:
 
@@ -267,7 +267,7 @@ After the third failed attempt, the coder must:
 4. Run `python scripts/stageset-status.py --escalate CHECK-ID`.
 5. Send the generated escalation file and run reports to the planner.
 
-The escalation file contains the skeleton, failed command, observed errors, attempt changes, and smallest reproduction.
+The escalation file contains the skeleton, failed command, observed errors, attempt changes, and smallest reproduction. The script gives it a timestamp ID in the format `YYYYMMDD-HHMMSS-ESCALATION`, with a numeric suffix if needed.
 
 The planner reads the evidence. The planner updates the skeleton to resolve the problem. The planner increases `spec_revision`, sets `status: READY`, sets `blocker_ref: -`, and sets `resolution_of` to the latest run ID.
 
@@ -317,6 +317,9 @@ python scripts/stageset-status.py --sync
 
 # Rebuild only the digest.
 python scripts/stageset-status.py --digest
+
+# Generate a timestamp-based ID for a new run report.
+python scripts/stageset-status.py --new-run-id
 
 # Check file formats, paths, statuses, reports, and generated files.
 python scripts/stageset-status.py --validate
