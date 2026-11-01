@@ -388,7 +388,11 @@ def validate(work: dict[str, Any], skeletons: list[dict[str, Any]], runs: list[d
         for line in s["lines"]:
             if "ASSUMPTION:" in line and not re.search(r"ASSUMPTION:\s*A-\d{2}", line):
                 errors.append(f"ERROR: {s['file'].relative_to(ROOT)}: assumption tag needs ID A-01")
+    seen_run_ids: set[str] = set()
     for r in runs:
+        if r["id"] in seen_run_ids:
+            errors.append(f"ERROR: duplicate run ID {r['id']}")
+        seen_run_ids.add(r["id"])
         if not re.fullmatch(r"\d{8}-\d{6}-RUN(?:-\d{2})?", r["id"]):
             errors.append(f"ERROR: {r['path'].relative_to(ROOT)}: run ID must use YYYYMMDD-HHMMSS-RUN format")
         if r["path"].stem != r["id"]:
